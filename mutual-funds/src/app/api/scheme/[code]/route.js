@@ -2,10 +2,10 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
-  const { code } = params;
-
+  const { schemeCode } = params;
+   console.log("Fetching scheme code:", schemeCode);
   try {
-    const res = await fetch(`https://api.mfapi.in/mf/${code}`);
+    const res = await fetch(`https://api.mfapi.in/mf/${schemeCode}`);
     const data = await res.json();
 
     return NextResponse.json({

@@ -284,7 +284,7 @@ const FundDetailsCard = ({ fund, schemeCode, fundDetails }) => {
             Fund Overview
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Fund House */}
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-gray-500">Fund House</h3>
@@ -308,6 +308,14 @@ const FundDetailsCard = ({ fund, schemeCode, fundDetails }) => {
                 ₹{fundDetails.startPrice}
               </p>
             </div>
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-gray-500">Highest NAV</h3>
+              <p className="text-lg font-semibold text-gray-800">
+                ₹{fundDetails.highestNav ? fundDetails.highestNav.toFixed(2) : 'N/A'}
+              </p>
+            </div>
+
 
             {/* Conditional Section for Active/Inactive Funds */}
             {isActive ? (
@@ -361,6 +369,13 @@ const FundDetailsCard = ({ fund, schemeCode, fundDetails }) => {
                 {isActive ? "Active" : "Inactive"}
               </p>
             </div>
+
+                <div className="space-y-2">
+              <h3 className="text-sm font-medium text-gray-500">Lowest NAV</h3>
+              <p className="text-lg font-semibold text-gray-800">
+                ₹{fundDetails.lowestNav ? fundDetails.lowestNav.toFixed(2) : 'N/A'}
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -378,6 +393,7 @@ export default function MFDetailPage() {
   const [returns, setReturns] = useState({});
   const [loading, setLoading] = useState(true);
   const [fundDetails, setFundDetails] = useState({});
+  const [chartDuration, setChartDuration] = useState('1y'); // '1y', '5y', 'all'
 
   const { code } = useParams();
   useEffect(() => {
@@ -400,6 +416,7 @@ useEffect(() => {
 
       setFund(data.metadata);
 
+      // 🧩 Process NAV history
       const navs = data.navHistory.map((item) => ({
         date: item.date,
         nav: parseFloat(item.nav),
@@ -416,7 +433,7 @@ useEffect(() => {
         return `${year}-${month}-${day}`;
       };
 
-      // 🧩 Build fundDetails object
+      // 🧩 Basic details
       const latestNav = navs[navs.length - 1];
       const firstNav = navs[0];
       const formattedDate = formatDate(latestNav.date);
@@ -425,10 +442,6 @@ useEffect(() => {
       const diffDays = Math.floor(
         (currentDate - latestNavDate) / (1000 * 60 * 60 * 24)
       );
-
-      console.log("Latest NAV Date:", latestNavDate);
-      console.log("Current Date:", currentDate);
-      console.log("Days since latest NAV:", diffDays);
 
       let isActive, statusDate;
       if (diffDays > 30) {
@@ -439,6 +452,11 @@ useEffect(() => {
         statusDate = latestNav.date;
       }
 
+      // 🧮 Find highest & lowest NAV
+      const highest = navs.reduce((a, b) => (a.nav > b.nav ? a : b));
+      const lowest = navs.reduce((a, b) => (a.nav < b.nav ? a : b));
+
+      // 🧩 Combine all details in one object
       const details = {
         startDate: firstNav.date,
         endDate: latestNav.date,
@@ -448,6 +466,10 @@ useEffect(() => {
         fundCode: schemeCode,
         isActive,
         statusDate,
+        highestNav: highest.nav,
+        highestNavDate: highest.date,
+        lowestNav: lowest.nav,
+        lowestNavDate: lowest.date,
       };
 
       setFundDetails(details);
@@ -480,6 +502,39 @@ useEffect(() => {
     };
   };
 
+  useEffect(() => {
+    if (fundDetails && !fundDetails.isActive) {
+      setChartDuration('all');
+    }
+  }, [fundDetails]);
+
+  const getFilteredNavData = () => {
+    if (!navData.length) return [];
+    
+    // If fund is inactive, always return all data
+    if (!fundDetails.isActive) {
+      return navData;
+    }
+    
+    const lastDate = new Date(navData[navData.length - 1].date);
+    
+    switch (chartDuration) {
+      case '1y':
+        const oneYearAgo = new Date(lastDate);
+        oneYearAgo.setFullYear(lastDate.getFullYear() - 1);
+        return navData.filter(item => new Date(item.date) >= oneYearAgo);
+      
+      case '5y':
+        const fiveYearsAgo = new Date(lastDate);
+        fiveYearsAgo.setFullYear(lastDate.getFullYear() - 5);
+        return navData.filter(item => new Date(item.date) >= fiveYearsAgo);
+      
+      case 'all':
+      default:
+        return navData;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -501,20 +556,76 @@ useEffect(() => {
       <FundDetailsCard fund={fund} schemeCode={schemeCode} fundDetails={fundDetails} />
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-          NAV Chart (Last 1 Year)
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            NAV Chart History
+          </h2>
+          
+          {/* Only show duration selector for active funds */}
+          {fundDetails.isActive ? (
+            <select
+              value={chartDuration}
+              onChange={(e) => setChartDuration(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="1y">Last 1 Year</option>
+              <option value="5y">Last 5 Years</option>
+              <option value="all">All Time</option>
+            </select>
+          ) : (
+            <div className="text-sm text-red-600 font-medium">
+              Inactive Fund - Showing Complete History
+            </div>
+          )}
+        </div>
+
+        {/* Add warning message for inactive funds */}
+        {!fundDetails.isActive && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            This fund is inactive. Last NAV updated on {fundDetails.statusDate}. 
+            Displaying complete historical data.
+          </div>
+        )}
+
         <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={navData}>
+          <LineChart data={getFilteredNavData()}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis 
               dataKey="date" 
               minTickGap={30}
               tick={{ fontSize: 12 }}
+              tickFormatter={(dateStr) => {
+                // Handle date formatting with error checking
+                try {
+                  // Check if date is in DD-MM-YYYY format
+                  if (dateStr.includes('-')) {
+                    const [day, month, year] = dateStr.split('-');
+                    const date = new Date(`${year}-${month}-${day}`);
+                    if (isNaN(date.getTime())) throw new Error('Invalid date');
+                    return date.toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: '2-digit'
+                    });
+                  }
+                  // If date is already in ISO format
+                  const date = new Date(dateStr);
+                  if (isNaN(date.getTime())) throw new Error('Invalid date');
+                  return date.toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: '2-digit'
+                  });
+                } catch (error) {
+                  console.error('Date parsing error:', dateStr);
+                  return 'Invalid Date';
+                }
+              }}
             />
             <YAxis 
               tick={{ fontSize: 12 }}
               domain={['auto', 'auto']}
+              tickFormatter={(value) => `₹${value}`}
             />
             <Tooltip 
               contentStyle={{ 
@@ -523,6 +634,32 @@ useEffect(() => {
                 borderRadius: '8px'
               }}
               formatter={(value) => [`₹${value}`, 'NAV']}
+              labelFormatter={(dateStr) => {
+                try {
+                  // Check if date is in DD-MM-YYYY format
+                  if (dateStr.includes('-')) {
+                    const [day, month, year] = dateStr.split('-');
+                    const date = new Date(`${year}-${month}-${day}`);
+                    if (isNaN(date.getTime())) throw new Error('Invalid date');
+                    return date.toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    });
+                  }
+                  // If date is already in ISO format
+                  const date = new Date(dateStr);
+                  if (isNaN(date.getTime())) throw new Error('Invalid date');
+                  return date.toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  });
+                } catch (error) {
+                  console.error('Tooltip date parsing error:', dateStr);
+                  return 'Invalid Date';
+                }
+              }}
             />
             <Line 
               type="monotone" 

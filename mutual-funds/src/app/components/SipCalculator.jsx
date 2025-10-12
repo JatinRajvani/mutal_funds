@@ -1,108 +1,267 @@
 'use client';
 
-import { useState } from 'react';
-import { Calculator } from 'lucide-react';
+import { useState } from "react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 
-export default function SipCalculator() {
-  const [sipAmount, setSipAmount] = useState('');
-  const [years, setYears] = useState('');
-  const [returnRate, setReturnRate] = useState('');
-  const [result, setResult] = useState(null);
+export default function SIPCalculator({ navData }) {
+  const [sipAmount, setSipAmount] = useState(5000);
+  const [frequency, setFrequency] = useState("monthly");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [results, setResults] = useState(null);
+  const [chartData, setChartData] = useState([]);
 
-  const calculateSIP = () => {
-    if (!sipAmount || !years || !returnRate) return;
+  const calculateSIPReturns = () => {
+    if (!startDate || !endDate || !navData || navData.length === 0) {
+      alert("Please fill all fields and ensure NAV data is available");
+      return;
+    }
 
-    const monthlyRate = returnRate / 12 / 100;
-    const months = years * 12;
-    const futureValue =
-      sipAmount *
-      (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate));
-    const invested = sipAmount * months;
-    const returns = futureValue - invested;
-    setResult({ futureValue, invested, returns });
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start >= end) {
+      alert("End date must be after start date");
+      return;
+    }
+
+    const filteredNavData = navData.filter((item) => {
+      const itemDate = new Date(item.date);
+      return itemDate >= start && itemDate <= end;
+    });
+
+    if (filteredNavData.length === 0) {
+      alert("No NAV data available for selected date range");
+      return;
+    }
+
+    let totalInvested = 0;
+    let units = 0;
+    const investmentSchedule = [];
+    let currentDate = new Date(start);
+
+    const frequencyDays =
+      frequency === "monthly" ? 30 : frequency === "quarterly" ? 90 : 365;
+
+    while (currentDate <= end) {
+      const closestNav = findClosestNav(filteredNavData, currentDate);
+
+      if (closestNav) {
+        const unitsAdded = sipAmount / closestNav.nav;
+        units += unitsAdded;
+        totalInvested += sipAmount;
+
+        investmentSchedule.push({
+          date: currentDate.toISOString().split("T")[0],
+          invested: totalInvested,
+          nav: closestNav.nav,
+          units: units,
+          value: units * closestNav.nav,
+        });
+      }
+
+      currentDate = new Date(
+        currentDate.setDate(currentDate.getDate() + frequencyDays)
+      );
+    }
+
+    const lastNav = filteredNavData[filteredNavData.length - 1];
+    const currentValue = units * lastNav.nav;
+    const absoluteReturn = ((currentValue - totalInvested) / totalInvested) * 100;
+
+    const years = (end - start) / (365.25 * 24 * 60 * 60 * 1000);
+    const annualizedReturn = (Math.pow(currentValue / totalInvested, 1 / years) - 1) * 100;
+
+    setResults({
+      totalInvested: totalInvested.toFixed(2),
+      currentValue: currentValue.toFixed(2),
+      absoluteReturn: absoluteReturn.toFixed(2),
+      annualizedReturn: annualizedReturn.toFixed(2),
+    });
+
+    const chartPoints = investmentSchedule.map((item) => ({
+      date: item.date,
+      invested: parseFloat(item.invested.toFixed(2)),
+      value: parseFloat(item.value.toFixed(2)),
+    }));
+
+    setChartData(chartPoints);
+  };
+
+  const findClosestNav = (navArray, targetDate) => {
+    let closest = null;
+    let minDiff = Infinity;
+
+    for (const nav of navArray) {
+      const navDate = new Date(nav.date);
+      const diff = Math.abs(navDate - targetDate);
+
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = nav;
+      }
+    }
+
+    return closest;
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-blue-100 max-w-lg mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl text-white">
-          <Calculator className="w-6 h-6" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900">SIP Calculator</h3>
-      </div>
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-2xl font-semibold mb-6 text-blue-800">SIP Calculator</h2>
 
-      <div className="space-y-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* SIP Amount */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Monthly Investment (₹)
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            SIP Amount (₹)
           </label>
           <input
             type="number"
             value={sipAmount}
             onChange={(e) => setSipAmount(Number(e.target.value))}
-            placeholder="Enter amount"
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-600 focus:outline-none transition"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            min="500"
           />
         </div>
 
+        {/* Frequency */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Time Period (Years)
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Frequency
+          </label>
+          <select
+            value={frequency}
+            onChange={(e) => setFrequency(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+
+        {/* Start Date */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Start Date
           </label>
           <input
-            type="number"
-            value={years}
-            onChange={(e) => setYears(Number(e.target.value))}
-            placeholder="Enter years"
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-600 focus:outline-none transition"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
+        {/* End Date */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Expected Return (% p.a.)
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            End Date
           </label>
           <input
-            type="number"
-            value={returnRate}
-            onChange={(e) => setReturnRate(Number(e.target.value))}
-            placeholder="Enter return rate"
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-600 focus:outline-none transition"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
+      </div>
 
-        <button
-          onClick={calculateSIP}
-          className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold rounded-xl hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
-        >
-          Calculate Returns
-        </button>
+      <button
+        onClick={calculateSIPReturns}
+        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+      >
+        Calculate Returns
+      </button>
 
-        {result && (
-          <div className="mt-8 bg-gradient-to-br from-blue-50 to-green-50 p-6 rounded-2xl border border-blue-200 animate-fadeIn">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-700 font-medium">Invested Amount</span>
-                <span className="text-lg font-bold text-gray-900">
-                  ₹{result.invested.toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700 font-medium">Estimated Returns</span>
-                <span className="text-lg font-bold text-green-600">
-                  ₹{result.returns.toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div className="flex justify-between border-t border-blue-200 pt-3">
-                <span className="text-gray-700 font-semibold">Total Value</span>
-                <span className="text-xl font-bold text-blue-600">
-                  ₹{result.futureValue.toLocaleString('en-IN')}
-                </span>
-              </div>
+      {results && (
+        <div className="mt-8">
+          {/* Result Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Total Invested</p>
+              <p className="text-2xl font-bold text-blue-800">
+                ₹{parseFloat(results.totalInvested).toLocaleString("en-IN")}
+              </p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Current Value</p>
+              <p className="text-2xl font-bold text-green-700">
+                ₹{parseFloat(results.currentValue).toLocaleString("en-IN")}
+              </p>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Absolute Return</p>
+              <p
+                className={`text-2xl font-bold ${
+                  parseFloat(results.absoluteReturn) >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {results.absoluteReturn}%
+              </p>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">Annualized Return</p>
+              <p
+                className={`text-2xl font-bold ${
+                  parseFloat(results.annualizedReturn) >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {results.annualizedReturn}%
+              </p>
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Chart */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              Investment Growth
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" minTickGap={30} />
+                <YAxis />
+                <Tooltip
+                  formatter={(value) =>
+                    `₹${parseFloat(value).toLocaleString("en-IN")}`
+                  }
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="invested"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  name="Total Invested"
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  name="Current Value"
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

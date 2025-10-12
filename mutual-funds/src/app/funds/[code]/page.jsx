@@ -10,235 +10,19 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
+import { FaRupeeSign, FaChartLine, FaCoins, FaArrowUp, FaExchangeAlt } from "react-icons/fa";
+const calculators = [
+  { key: "sip", label: "SIP Calculator", icon: <FaRupeeSign size={24} /> },
+  { key: "swp", label: "SWP Calculator", icon: <FaChartLine size={24} /> },
+  { key: "lumpsum", label: "Lumpsum Calculator", icon: <FaCoins size={24} /> },
+  { key: "stepup", label: "Step-up Calculator", icon: <FaArrowUp size={24} /> },
+  { key: "stepup_swp", label: "Step-up SWP", icon: <FaExchangeAlt size={24} /> },
+];
+
 import { useParams } from 'next/navigation';
-// SIP Calculator Component (embedded)
-function SIPCalculator({ navData }) {
-  const [sipAmount, setSipAmount] = useState(5000);
-  const [frequency, setFrequency] = useState('monthly');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [results, setResults] = useState(null);
-  const [chartData, setChartData] = useState([]);
-
-  const calculateSIPReturns = () => {
-    if (!startDate || !endDate || !navData || navData.length === 0) {
-      alert('Please fill all fields and ensure NAV data is available');
-      return;
-    }
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    if (start >= end) {
-      alert('End date must be after start date');
-      return;
-    }
-
-    const filteredNavData = navData.filter((item) => {
-      const itemDate = new Date(item.date);
-      return itemDate >= start && itemDate <= end;
-    });
-
-    if (filteredNavData.length === 0) {
-      alert('No NAV data available for selected date range');
-      return;
-    }
-
-    let totalInvested = 0;
-    let units = 0;
-    const investmentSchedule = [];
-    let currentDate = new Date(start);
-
-    const frequencyDays = frequency === 'monthly' ? 30 : frequency === 'quarterly' ? 90 : 365;
-
-    while (currentDate <= end) {
-      const closestNav = findClosestNav(filteredNavData, currentDate);
-      
-      if (closestNav) {
-        const unitsAdded = sipAmount / closestNav.nav;
-        units += unitsAdded;
-        totalInvested += sipAmount;
-
-        investmentSchedule.push({
-          date: currentDate.toISOString().split('T')[0],
-          invested: totalInvested,
-          nav: closestNav.nav,
-          units: units,
-          value: units * closestNav.nav,
-        });
-      }
-
-      currentDate = new Date(currentDate.setDate(currentDate.getDate() + frequencyDays));
-    }
-
-    const lastNav = filteredNavData[filteredNavData.length - 1];
-    const currentValue = units * lastNav.nav;
-    const absoluteReturn = ((currentValue - totalInvested) / totalInvested) * 100;
-
-    const years = (end - start) / (365.25 * 24 * 60 * 60 * 1000);
-    const annualizedReturn = (Math.pow(currentValue / totalInvested, 1 / years) - 1) * 100;
-
-    setResults({
-      totalInvested: totalInvested.toFixed(2),
-      currentValue: currentValue.toFixed(2),
-      absoluteReturn: absoluteReturn.toFixed(2),
-      annualizedReturn: annualizedReturn.toFixed(2),
-    });
-
-    const chartPoints = investmentSchedule.map((item) => ({
-      date: item.date,
-      invested: parseFloat(item.invested.toFixed(2)),
-      value: parseFloat(item.value.toFixed(2)),
-    }));
-
-    setChartData(chartPoints);
-  };
-
-  const findClosestNav = (navArray, targetDate) => {
-    let closest = null;
-    let minDiff = Infinity;
-
-    for (const nav of navArray) {
-      const navDate = new Date(nav.date);
-      const diff = Math.abs(navDate - targetDate);
-      
-      if (diff < minDiff) {
-        minDiff = diff;
-        closest = nav;
-      }
-    }
-
-    return closest;
-  };
-
-  return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-semibold mb-6 text-blue-800">SIP Calculator</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            SIP Amount (₹)
-          </label>
-          <input
-            type="number"
-            value={sipAmount}
-            onChange={(e) => setSipAmount(Number(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            min="500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Frequency
-          </label>
-          <select
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Start Date
-          </label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            End Date
-          </label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      <button
-        onClick={calculateSIPReturns}
-        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-      >
-        Calculate Returns
-      </button>
-
-      {results && (
-        <div className="mt-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Total Invested</p>
-              <p className="text-2xl font-bold text-blue-800">₹{parseFloat(results.totalInvested).toLocaleString('en-IN')}</p>
-            </div>
-
-            <div className="bg-green-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Current Value</p>
-              <p className="text-2xl font-bold text-green-700">₹{parseFloat(results.currentValue).toLocaleString('en-IN')}</p>
-            </div>
-
-            <div className="bg-purple-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Absolute Return</p>
-              <p className={`text-2xl font-bold ${parseFloat(results.absoluteReturn) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {results.absoluteReturn}%
-              </p>
-            </div>
-
-            <div className="bg-orange-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Annualized Return</p>
-              <p className={`text-2xl font-bold ${parseFloat(results.annualizedReturn) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {results.annualizedReturn}%
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Investment Growth</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" minTickGap={30} />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value) => `₹${parseFloat(value).toLocaleString('en-IN')}`}
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="invested" 
-                  stroke="#3b82f6" 
-                  strokeWidth={2} 
-                  name="Total Invested"
-                  dot={false}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#10b981" 
-                  strokeWidth={2} 
-                  name="Current Value"
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+import SIPCalculator from '../../components/SipCalculator';
+import SWPCalculator from '@/app/components/SWPCalculator';
+import HybridLumpsumCalculator from '@/app/components/LumsumpCalculator';
 
 // New Fund Details Card Component
 const FundDetailsCard = ({ fund, schemeCode, fundDetails }) => {
@@ -383,8 +167,6 @@ const FundDetailsCard = ({ fund, schemeCode, fundDetails }) => {
   );
 };
 
-
-
 // Main MF Detail Page Component
 export default function MFDetailPage() {
   const [schemeCode, setSchemeCode] = useState('');
@@ -394,7 +176,7 @@ export default function MFDetailPage() {
   const [loading, setLoading] = useState(true);
   const [fundDetails, setFundDetails] = useState({});
   const [chartDuration, setChartDuration] = useState('1y'); // '1y', '5y', 'all'
-
+  const [activeTab, setActiveTab] = useState("sip");
   const { code } = useParams();
   useEffect(() => {
     // Extract scheme code from URL (for demonstration, using a default value)
@@ -484,23 +266,54 @@ useEffect(() => {
 }, [schemeCode]);
 
 
-  const computeReturns = (navs) => {
-    if (!navs || navs.length === 0) return {};
-    const todayNav = navs[navs.length - 1].nav;
+const computeReturns = (navs) => {
+  if (!navs || navs.length === 0) return {};
 
-    const getPastNav = (monthsAgo) => {
-      const pastIndex = navs.length - 1 - monthsAgo * 20;
-      if (pastIndex < 0) return navs[0].nav;
-      return navs[pastIndex].nav;
-    };
-
-    return {
-      '1m': (((todayNav - getPastNav(1)) / getPastNav(1)) * 100).toFixed(2),
-      '3m': (((todayNav - getPastNav(3)) / getPastNav(3)) * 100).toFixed(2),
-      '6m': (((todayNav - getPastNav(6)) / getPastNav(6)) * 100).toFixed(2),
-      '1y': (((todayNav - getPastNav(12)) / getPastNav(12)) * 100).toFixed(2),
-    };
+  const parseNavDate = (dateStr) => {
+    const [day, month, year] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
   };
+
+  // Sort NAVs ascending by date (safety)
+  const sortedNavs = [...navs].sort((a, b) => parseNavDate(a.date) - parseNavDate(b.date));
+
+  const todayNavObj = sortedNavs[sortedNavs.length - 1];
+  const todayNav = parseFloat(todayNavObj.nav);
+  const todayDate = parseNavDate(todayNavObj.date);
+
+  const getNavBeforeOrOn = (targetDate) => {
+    const pastNavs = sortedNavs.filter(n => parseNavDate(n.date) <= targetDate);
+    if (pastNavs.length === 0) return parseFloat(sortedNavs[0].nav);
+    return parseFloat(pastNavs[pastNavs.length - 1].nav);
+  };
+
+  const periods = {
+    '1d': 1,
+    '1m': 1,
+    '3m': 3,
+    '6m': 6,
+    '1y': 12
+  };
+
+  const returns = {};
+
+  for (const [key, value] of Object.entries(periods)) {
+    const targetDate = new Date(todayDate);
+    if (key === '1d') {
+      targetDate.setDate(todayDate.getDate() - value);
+    } else {
+      targetDate.setMonth(todayDate.getMonth() - value);
+    }
+
+    const pastNav = getNavBeforeOrOn(targetDate);
+    const ret = ((todayNav - pastNav) / pastNav) * 100;
+    returns[key] = ret.toFixed(2);
+  }
+
+  return returns;
+};
+
+
 
   useEffect(() => {
     if (fundDetails && !fundDetails.isActive) {
@@ -550,6 +363,8 @@ useEffect(() => {
       </div>
     );
   }
+
+  console.log(returns)
 
   return (
     <div className="pt-[120px] bg-gray-50 min-h-screen px-4 md:px-8 lg:px-16 pb-12">
@@ -691,6 +506,7 @@ useEffect(() => {
             </thead>
             <tbody>
               {[
+                { key: '1d', label: '1 Day' },
                 { key: '1m', label: '1 Month' },
                 { key: '3m', label: '3 Months' },
                 { key: '6m', label: '6 Months' },
@@ -713,8 +529,31 @@ useEffect(() => {
           </table>
         </div>
       </div>
+      <div className="flex flex-wrap gap-4 mb-6">
+        {calculators.map((calc) => (
+          <button
+            key={calc.key}
+            onClick={() => setActiveTab(calc.key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
+              activeTab === calc.key
+                ? "bg-blue-500 text-white shadow-lg"
+                : "bg-gray-100 text-gray-700 hover:bg-blue-100"
+            }`}
+          >
+            {calc.icon}
+            {calc.label}
+          </button>
+        ))}
+      </div>
 
-      <SIPCalculator navData={navData} />
+      {/* Tab Content */}
+      <div className="border-t border-gray-200 pt-6">
+        {activeTab === "sip" && <SIPCalculator navData={navData} />}
+        {activeTab === "swp" && <SWPCalculator navData={navData} returns={returns} />}
+        {activeTab === "lumpsum" && <HybridLumpsumCalculator navData={navData} returns={returns} />}
+        {activeTab === "stepup" && <div>Step-up Calculator Component</div>}
+        {activeTab === "stepup_swp" && <div>Step-up SWP Component</div>}
+      </div>
     </div>
   );
 }

@@ -23,7 +23,7 @@ import { useParams } from 'next/navigation';
 import SIPCalculator from '../../components/SipCalculator';
 import SWPCalculator from '@/app/components/SWPCalculator';
 import HybridLumpsumCalculator from '@/app/components/LumsumpCalculator';
-
+import StepUpCalculator from '@/app/components/stepupCalculator';
 // New Fund Details Card Component
 const FundDetailsCard = ({ fund, schemeCode, fundDetails }) => {
   const isActive = fundDetails?.isActive;
@@ -551,7 +551,7 @@ const computeReturns = (navs) => {
         {activeTab === "sip" && <SIPCalculator navData={navData} />}
         {activeTab === "swp" && <SWPCalculator navData={navData} returns={returns} />}
         {activeTab === "lumpsum" && <HybridLumpsumCalculator navData={navData} returns={returns} />}
-        {activeTab === "stepup" && <div>Step-up Calculator Component</div>}
+        {activeTab === "stepup" && <StepUpCalculator />}
         {activeTab === "stepup_swp" && <div>Step-up SWP Component</div>}
       </div>
     </div>

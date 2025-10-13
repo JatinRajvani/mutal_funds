@@ -12,7 +12,7 @@ export async function GET(req) {
     }
 
     // ✅ Step 2: Limit to avoid rate-limit (you can increase later)
-    const limit = 37000;
+    const limit = 37165;
     const fundsToCheck = allFunds.slice(0, limit);
 
     const activeFunds = [];

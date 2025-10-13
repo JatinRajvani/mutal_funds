@@ -17,6 +17,7 @@ const calculators = [
   { key: "lumpsum", label: "Lumpsum Calculator", icon: <FaCoins size={24} /> },
   { key: "stepup", label: "Step-up Calculator", icon: <FaArrowUp size={24} /> },
   { key: "stepup_swp", label: "Step-up SWP", icon: <FaExchangeAlt size={24} /> },
+  { key: "rolling", label: "Rolling Returns", icon: <FaExchangeAlt size={24} /> },
 ];
 
 import { useParams } from 'next/navigation';
@@ -25,6 +26,7 @@ import SWPCalculator from '@/app/components/SWPCalculator';
 import HybridLumpsumCalculator from '@/app/components/LumsumpCalculator';
 import StepUpCalculator from '@/app/components/stepupCalculator';
 import StepUpSWPCalculator from '@/app/components/stepupswpCalculator';
+import RollingReturnDashboard from '@/app/components/rollingreturn';
 // New Fund Details Card Component
 const FundDetailsCard = ({ fund, schemeCode, fundDetails }) => {
   const isActive = fundDetails?.isActive;
@@ -554,6 +556,7 @@ const computeReturns = (navs) => {
         {activeTab === "lumpsum" && <HybridLumpsumCalculator navData={navData} returns={returns} />}
         {activeTab === "stepup" && <StepUpCalculator />}
         {activeTab === "stepup_swp" && <StepUpSWPCalculator navData={navData} returns={returns} />}
+        {activeTab === "rolling" && <RollingReturnDashboard navData={navData} />}
       </div>
     </div>
   );

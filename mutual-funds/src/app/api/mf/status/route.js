@@ -1,9 +1,9 @@
 // src/app/api/mf/active/route.js
 import { NextResponse } from "next/server";
+import dbPromise from "../../../config/db";
 
 export async function GET(req) {
   try {
-    // ✅ Step 1: Fetch all mutual funds
     const res = await fetch("https://api.mfapi.in/mf");
     const allFunds = await res.json();
 
@@ -11,26 +11,34 @@ export async function GET(req) {
       return NextResponse.json({ error: "No mutual funds found" }, { status: 404 });
     }
 
-    // ✅ Step 2: Limit to avoid rate-limit (you can increase later)
-    const limit = 37165;
-    const fundsToCheck = allFunds.slice(0, limit);
+    const fundsToCheck = allFunds;
 
-    const activeFunds = [];
+    const activeFunds = fundsToCheck.filter(fund => fund.isinGrowth != null);
 
-    // ✅ Step 3: Check each fund’s NAV recency
-    for (const fund of fundsToCheck) {
-         if(fund.isinGrowth != null){
-             activeFunds.push(fund);
-         }
-    };
+    const db = await dbPromise;
+    const collection = db.collection("activeFunds");
 
-    // ✅ Step 5: Return all active mutual funds
+    if (activeFunds.length > 0) {
+      // ✅ Use bulkWrite to insert new funds or update existing ones
+      const operations = activeFunds.map(fund => ({
+        updateOne: {
+          filter: { schemeCode: fund.schemeCode }, // unique identifier
+          update: { $set: fund },
+          upsert: true, // insert if not exists
+        },
+      }));
+
+      await collection.bulkWrite(operations);
+      console.log(`✅ ${activeFunds.length} active funds upserted into MongoDB`);
+    }
+
     return NextResponse.json({
       totalChecked: fundsToCheck.length,
       activeCount: activeFunds.length,
       activeFunds,
     });
   } catch (error) {
+    console.error("MongoDB / API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

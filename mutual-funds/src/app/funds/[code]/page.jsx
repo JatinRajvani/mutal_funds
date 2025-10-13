@@ -365,7 +365,7 @@ const computeReturns = (navs) => {
     );
   }
 
-  console.log(returns)
+  // console.log(returns)
 
   return (
     <div className="pt-[120px] bg-gray-50 min-h-screen px-4 md:px-8 lg:px-16 pb-12">
@@ -553,7 +553,7 @@ const computeReturns = (navs) => {
         {activeTab === "swp" && <SWPCalculator navData={navData} returns={returns} />}
         {activeTab === "lumpsum" && <HybridLumpsumCalculator navData={navData} returns={returns} />}
         {activeTab === "stepup" && <StepUpCalculator />}
-        {activeTab === "stepup_swp" && <StepUpSWPCalculator />}
+        {activeTab === "stepup_swp" && <StepUpSWPCalculator navData={navData} returns={returns} />}
       </div>
     </div>
   );

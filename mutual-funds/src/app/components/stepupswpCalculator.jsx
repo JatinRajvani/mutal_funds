@@ -11,7 +11,7 @@ import {
   Legend,
 } from "recharts";
 
-export default function StepUpSWPCalculator({ navData = [], returns = 8 }) {
+export default function StepUpSWPCalculator({ navData = [], returns = 0 }) {
   const [initialInvestment, setInitialInvestment] = useState("");
   const [monthlyWithdrawal, setMonthlyWithdrawal] = useState("");
   const [stepUpPercent, setStepUpPercent] = useState("");

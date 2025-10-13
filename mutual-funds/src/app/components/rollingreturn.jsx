@@ -137,7 +137,7 @@ export default function RollingReturnGraphHover({ navData = [] }) {
 
       {/* Filter dropdown */}
       {data.length > 0 && (
-        <div className="flex justify-end mb-2">
+        <div className="flex justify-end mb-2 text-black">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}

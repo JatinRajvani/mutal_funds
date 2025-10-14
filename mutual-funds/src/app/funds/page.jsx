@@ -11,7 +11,7 @@ export default function MutualFunds() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState('all');
-  const fundsPerPage = 12;
+  const fundsPerPage = 16;
 
   // Add mounted check
   useEffect(() => {

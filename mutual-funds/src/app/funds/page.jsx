@@ -13,6 +13,12 @@ export default function MutualFunds() {
   const [filterType, setFilterType] = useState('all');
   const fundsPerPage = 16;
 
+  const goToPage = (page) => {
+  if (page < 1 || page > totalPages) return;
+  setCurrentPage(page);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
   // Add mounted check
   useEffect(() => {
     setMounted(true);

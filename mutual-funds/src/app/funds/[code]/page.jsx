@@ -554,7 +554,7 @@ const computeReturns = (navs) => {
         {activeTab === "sip" && <SIPCalculator navData={navData} />}
         {activeTab === "swp" && <SWPCalculator navData={navData} returns={returns} />}
         {activeTab === "lumpsum" && <HybridLumpsumCalculator navData={navData} returns={returns} />}
-        {activeTab === "stepup" && <StepUpCalculator />}
+        {activeTab === "stepup" && <StepUpCalculator  navData={navData} returns={returns} />}
         {activeTab === "stepup_swp" && <StepUpSWPCalculator navData={navData} returns={returns} />}
         {activeTab === "rolling" && <RollingReturnDashboard navData={navData} />}
       </div>

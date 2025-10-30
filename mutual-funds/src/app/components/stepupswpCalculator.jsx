@@ -201,7 +201,9 @@ export default function StepUpSWPCalculator({ navData = [] }) {
           {summary && (
             <div className="mt-6 bg-gray-50 p-4 rounded-lg shadow-inner text-center text-black">
               <p>Investment Date: {summary.investDate}</p>
+              <p>Invest amount: ₹{initialInvestment}</p>
               <p>Buy NAV: ₹{summary.investNav.toFixed(4)}</p>
+              <p>Total units: {(initialInvestment/summary.investNav.toFixed(4)).toFixed(2)}</p>
               <p>Total Withdrawn: ₹{summary.totalWithdrawn.toFixed(2)}</p>
               <p>Final Balance: ₹{summary.finalBalance.toFixed(2)}</p>
               <p>Units Left: {summary.unitsLeft.toFixed(4)}</p>

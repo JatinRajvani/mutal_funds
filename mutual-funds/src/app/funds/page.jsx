@@ -2,27 +2,33 @@
 import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Loading from './loading';
+
 export default function MutualFunds() {
-  // Initialize state with null or loading state
   const [mounted, setMounted] = useState(false);
   const [funds, setFunds] = useState([]);
   const [filteredFunds, setFilteredFunds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(search); // ✅ added
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState('all');
   const fundsPerPage = 16;
 
   const goToPage = (page) => {
-  if (page < 1 || page > totalPages) return;
-  setCurrentPage(page);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  // Add mounted check
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // ✅ Debounce search value
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(search), 1000);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   useEffect(() => {
     if (mounted) {
@@ -31,46 +37,45 @@ export default function MutualFunds() {
     }
   }, [filterType, mounted]);
 
+  // ✅ Use debounced search instead of direct search
   useEffect(() => {
     if (mounted) {
-      handleSearch();
+      handleSearch(debouncedSearch);
       setCurrentPage(1);
     }
-  }, [search, funds, mounted]);
+  }, [debouncedSearch, funds, mounted]);
 
-const fetchMutualFunds = async () => {
-  try {
-    const endpoint = filterType === 'active'
-      ? '/api/activeusers'
-      : '/api/mf';
-    const res = await fetch(endpoint);
-    const data = await res.json();
+  const fetchMutualFunds = async () => {
+    try {
+      const endpoint = filterType === 'active'
+        ? '/api/activeusers'
+        : '/api/mf';
+      const res = await fetch(endpoint);
+      const data = await res.json();
 
-    // Safely handle missing data
-    const fundData = Array.isArray(data.data)
-      ? data.data
-      : Array.isArray(data)
-      ? data
-      : [];
+      const fundData = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
 
-    setFunds(fundData);
-    setFilteredFunds(fundData);
-  } catch (error) {
-    console.error('Error fetching mutual funds:', error);
-    setFunds([]);
-    setFilteredFunds([]);
-  } finally {
-    setTimeout(() => setLoading(false), 300);
-  }
-};
+      setFunds(fundData);
+      setFilteredFunds(fundData);
+    } catch (error) {
+      console.error('Error fetching mutual funds:', error);
+      setFunds([]);
+      setFilteredFunds([]);
+    } finally {
+      setTimeout(() => setLoading(false), 300);
+    }
+  };
 
-
-  const handleSearch = () => {
-    if (!search.trim()) {
+  const handleSearch = (searchValue = '') => {
+    if (!searchValue.trim()) {
       setFilteredFunds(funds);
       return;
     }
-    const lowerSearch = search.toLowerCase();
+    const lowerSearch = searchValue.toLowerCase();
     setFilteredFunds(
       funds.filter(
         (fund) =>
@@ -80,19 +85,14 @@ const fetchMutualFunds = async () => {
     );
   };
 
-  // Return null or loading state before mounting
   if (!mounted) {
-    return null; // or a loading skeleton
+    return null;
   }
 
-  // Your existing loading check
   if (loading) {
-    return (
-      <Loading />
-    );
+    return <Loading />;
   }
 
-  // Calculate pagination values after mounting
   const totalPages = Math.ceil(filteredFunds.length / fundsPerPage);
   const indexOfLastFund = currentPage * fundsPerPage;
   const indexOfFirstFund = indexOfLastFund - fundsPerPage;
@@ -100,7 +100,6 @@ const fetchMutualFunds = async () => {
 
   return (
     <div className="pt-[120px] bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen px-4 md:px-8 lg:px-16 pb-12">
-      {/* Header */}
       <header className="text-center mb-12">
         <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
           Mutual Funds Explorer
@@ -111,11 +110,9 @@ const fetchMutualFunds = async () => {
         </p>
       </header>
 
-      {/* Search and Filter Section */}
       <div className="max-w-4xl mx-auto mb-8">
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
           <div className="flex flex-col md:flex-row gap-4 items-center">
-            {/* Search Bar */}
             <div className="flex-1 w-full relative">
               <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -129,7 +126,6 @@ const fetchMutualFunds = async () => {
               />
             </div>
 
-            {/* Filter Buttons */}
             <div className="flex gap-2 bg-gray-100 rounded-xl p-1">
               <button
                 onClick={() => setFilterType('all')}
@@ -155,7 +151,6 @@ const fetchMutualFunds = async () => {
           </div>
         </div>
 
-        {/* Stats Bar */}
         <div className="mt-4 flex justify-center">
           <div className="bg-white rounded-full px-6 py-2 shadow-md border border-gray-100">
             <span className="text-gray-600">Total Funds: </span>
@@ -164,7 +159,6 @@ const fetchMutualFunds = async () => {
         </div>
       </div>
 
-      {/* Funds Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
         {currentFunds.length === 0 ? (
           <div className="col-span-full flex flex-col items-center justify-center py-20">
@@ -181,23 +175,19 @@ const fetchMutualFunds = async () => {
               href={`/funds/${fund.schemeCode}`}
               className="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100"
             >
-              {/* Gradient overlay on hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/5 group-hover:to-indigo-500/5 transition-all duration-300"></div>
-              
+
               <div className="relative p-6">
-                {/* Icon */}
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
 
-                {/* Fund Name */}
                 <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                   {fund.schemeName}
                 </h3>
 
-                {/* Scheme Code */}
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                   <span className="text-sm text-gray-500">Scheme Code</span>
                   <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
@@ -205,7 +195,6 @@ const fetchMutualFunds = async () => {
                   </span>
                 </div>
 
-                {/* Arrow Icon */}
                 <div className="absolute bottom-4 right-4 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
                   <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -217,12 +206,10 @@ const fetchMutualFunds = async () => {
         )}
       </div>
 
-      {/* Enhanced Pagination */}
       {totalPages > 1 && (
         <div className="mt-12 flex justify-center">
           <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
             <div className="flex items-center space-x-2 flex-wrap justify-center gap-2">
-              {/* First Button */}
               <button
                 onClick={() => goToPage(1)}
                 disabled={currentPage === 1}
@@ -231,7 +218,6 @@ const fetchMutualFunds = async () => {
                 First
               </button>
 
-              {/* Previous Button */}
               <button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
@@ -240,7 +226,6 @@ const fetchMutualFunds = async () => {
                 ‹
               </button>
 
-              {/* Page Numbers */}
               <div className="flex items-center space-x-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter(
@@ -268,7 +253,6 @@ const fetchMutualFunds = async () => {
                   ))}
               </div>
 
-              {/* Next Button */}
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -277,7 +261,6 @@ const fetchMutualFunds = async () => {
                 ›
               </button>
 
-              {/* Last Button */}
               <button
                 onClick={() => goToPage(totalPages)}
                 disabled={currentPage === totalPages}
@@ -287,7 +270,6 @@ const fetchMutualFunds = async () => {
               </button>
             </div>
 
-            {/* Page Info */}
             <div className="mt-3 text-center text-sm text-gray-600">
               Page <span className="font-semibold text-blue-600">{currentPage}</span> of{' '}
               <span className="font-semibold text-blue-600">{totalPages}</span>

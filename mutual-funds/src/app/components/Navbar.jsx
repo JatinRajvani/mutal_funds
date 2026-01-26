@@ -24,7 +24,7 @@ export default function Navbar() {
                 <div className="absolute inset-0 bg-blue-600 rounded-full blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
               </div>
               <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent">
-                InvestMate
+                MfInsights
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-1">

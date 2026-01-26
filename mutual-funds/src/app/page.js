@@ -144,7 +144,7 @@ export default function Home() {
     {
       name: "Priya Sharma",
       role: "Software Engineer",
-      content: "InvestMate made investing so simple! The SIP calculator helped me plan my retirement perfectly.",
+      content: "MfInsights made investing so simple! The SIP calculator helped me plan my retirement perfectly.",
       rating: 5
     },
     {
@@ -182,7 +182,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-blue-600 rounded-full blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
               </div>
               <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent">
-                InvestMate
+                MfInsights
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-1">
@@ -343,7 +343,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                Why Investors Choose <span className="text-blue-600">InvestMate</span>
+                Why Investors Choose <span className="text-blue-600">MfInsights</span>
               </h2>
               <p className="text-xl text-gray-600 mb-8">
                 Join thousands of smart investors who are building wealth with confidence
@@ -464,7 +464,7 @@ export default function Home() {
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-5xl font-bold mb-6">Ready to Start Your Investment Journey?</h2>
-          <p className="text-xl text-blue-100 mb-10">Join 50,000+ investors who are building wealth with InvestMate</p>
+          <p className="text-xl text-blue-100 mb-10">Join 50,000+ investors who are building wealth with MfInsights</p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="px-10 py-5 bg-white text-gray-900 font-bold rounded-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
@@ -487,7 +487,7 @@ export default function Home() {
             <div className="md:col-span-2">
               <div className="flex items-center mb-4">
                 <TrendingUp className="w-8 h-8 text-blue-400" />
-                <span className="ml-2 text-2xl font-bold">InvestMate</span>
+                <span className="ml-2 text-2xl font-bold">MfInsights</span>
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
                 Your trusted partner in wealth creation. We help individuals achieve their financial goals through smart, systematic investing.
@@ -533,7 +533,7 @@ export default function Home() {
           <div className="border-t border-gray-800 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-gray-400 text-sm">
-                © 2025 InvestMate. All rights reserved.
+                © 2025 MfInsights. All rights reserved.
               </p>
               <div className="flex gap-6 text-sm">
                 <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</a>

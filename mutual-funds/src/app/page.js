@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { TrendingUp, BarChart3, Brain, Shield, Calculator, ArrowRight, CheckCircle, Star, Users, Award, Zap, Clock, Globe } from 'lucide-react';
+import Image from "next/image"; // ✅ CORRECT
+
 const SipCalculator = () => {
   const [investment, setInvestment] = useState(5000);
   const [years, setYears] = useState(10);
@@ -209,7 +211,7 @@ export default function Home() {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full border border-blue-100">
                 <Zap className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-semibold text-blue-600">India's #1 Investment Platform</span>
+                <span className="text-sm font-semibold text-blue-600">{"India's #1 Investment Platform"}</span>
               </div>
               
               <h1 className="text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
@@ -254,11 +256,14 @@ export default function Home() {
             <div className="relative lg:h-[600px]">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-green-500 rounded-3xl blur-3xl opacity-20"></div>
               <div className="relative bg-white/50 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/20">
-                <img
-                  src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=80"
-                  alt="Investment Growth"
-                  className="rounded-2xl shadow-xl mb-6 w-full h-64 object-cover"
-                />
+           <Image
+  src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=80"
+  alt="Investment Growth"
+  width={800}
+  height={400}
+  className="rounded-2xl shadow-xl mb-6 w-full h-64 object-cover"
+/>
+
                 <div className="grid grid-cols-2 gap-4">
                   {stats.slice(0, 2).map((stat, index) => (
                     <div key={index} className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-gray-100">
@@ -356,11 +361,14 @@ export default function Home() {
             </div>
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-green-400 rounded-3xl blur-3xl opacity-20"></div>
-              <img
-                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80"
-                alt="Investment Dashboard"
-                className="relative rounded-3xl shadow-2xl"
-              />
+       <Image
+  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80"
+  alt="Investment Dashboard"
+  width={800}
+  height={533}
+  className="relative rounded-3xl shadow-2xl"
+/>
+
             </div>
           </div>
         </div>
@@ -436,7 +444,7 @@ export default function Home() {
                     <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-gray-700 leading-relaxed mb-6 italic">"{testimonial.content}"</p>
+                <p className="text-gray-700 leading-relaxed mb-6 italic">{testimonial.content}</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-green-400"></div>
                   <div>

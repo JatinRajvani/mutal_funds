@@ -26,24 +26,33 @@ export default function MutualFunds() {
 
   // ✅ Debounce search value
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(search), 1000);
-    return () => clearTimeout(handler);
+    console.log("User typing:", search);
+    const handler = setTimeout(() => {
+      console.log("Debounced value finalized:", search);
+      setDebouncedSearch(search)}, 2000);
+
+          console.log("Debounce timer set (or reset)");
+    return () => {
+      clearTimeout(handler);
+      console.log("Debounce timer cleared and reset");
+    };
   }, [search]);
 
-  useEffect(() => {
-    if (mounted) {
-      setLoading(true);
-      fetchMutualFunds();
-    }
-  }, [filterType, mounted]);
+useEffect(() => {
+  if (mounted) {
+    setLoading(true);
+    fetchMutualFunds();
+  }
+}, [filterType, mounted]);
 
-  // ✅ Use debounced search instead of direct search
-  useEffect(() => {
-    if (mounted) {
-      handleSearch(debouncedSearch);
-      setCurrentPage(1);
-    }
-  }, [debouncedSearch, funds, mounted]);
+// ✅ Handle Debounced Search properly here
+useEffect(() => {
+  if (mounted) {
+    console.log("Debounced search for:", debouncedSearch);
+    handleSearch(debouncedSearch);
+    setCurrentPage(1);
+  }
+}, [debouncedSearch, funds, mounted]);
 
   const fetchMutualFunds = async () => {
     try {
